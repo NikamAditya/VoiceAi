@@ -42,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText editText;
 
     private String stringURLEndPoint = "https://api.openai.com/v1/chat/completions";
-    private String stringAPIKey = "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";
+    private String stringAPIKey = "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";
     private String stringOutput = "";
 
     private TextToSpeech textToSpeech;
@@ -107,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
                 if (matches != null) {
                     string = matches.get(0);
                     editText.setText(string);
-                    chatGPTModel(string);
+                    chatGPTModel(string+" In maximum 3 sentences");
                 }
             }
 
