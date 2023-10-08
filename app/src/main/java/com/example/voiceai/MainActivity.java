@@ -42,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText editText;
 
     private String stringURLEndPoint = "https://api.openai.com/v1/chat/completions";
-    private String stringAPIKey = "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";
+    private String stringAPIKey = "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";
     private String stringOutput = "";
 
     private TextToSpeech textToSpeech;
