@@ -10,6 +10,7 @@ import androidx.core.app.ActivityCompat;
 
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.provider.MediaStore;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
@@ -34,6 +35,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
@@ -42,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText editText;
 
     private String stringURLEndPoint = "https://api.openai.com/v1/chat/completions";
-    private String stringAPIKey = "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";
+    private String stringAPIKey = "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";
     private String stringOutput = "";
 
     private TextToSpeech textToSpeech;
@@ -72,6 +74,7 @@ public class MainActivity extends AppCompatActivity {
 
         intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
 
         speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
         speechRecognizer.setRecognitionListener(new RecognitionListener() {
@@ -107,7 +110,16 @@ public class MainActivity extends AppCompatActivity {
                 if (matches != null) {
                     string = matches.get(0);
                     editText.setText(string);
-                    chatGPTModel(string+" In maximum 3 sentences");
+                    switch (string.toLowerCase()) {
+                        case "open camera":
+                            Intent camera = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                            startActivity(camera);
+                            break;
+
+                        default:
+                            chatGPTModel(string + " In maximum 3 sentences");
+                    }
+
                 }
             }
 
@@ -133,11 +145,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void chatGPTModel( String stringInput){
-        /*if (retryCount <= 0) {
-            // If the maximum retry count is reached, display an error message.
-            textView.setText("Error: Maximum retry count reached.");
-            return;
-        }*/
+
         textView.setText("In Progress ...");
         textToSpeech.speak("In Progress", TextToSpeech.QUEUE_FLUSH, null,null);
 
@@ -175,24 +183,7 @@ public class MainActivity extends AppCompatActivity {
                 textView.setText(stringOutput);
                 textToSpeech.speak(stringOutput, TextToSpeech.QUEUE_FLUSH, null,null);
             }
-        }/*,new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                if (error.networkResponse != null && error.networkResponse.statusCode == 429) {
-                    // If a 429 error is received, retry after the specified delay.
-                    int retryAfter = Integer.parseInt(error.networkResponse.headers.get("Retry-After"));
-                    try {
-                        Thread.sleep(retryAfter * 1000); // Convert seconds to milliseconds
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    chatGPTModel(stringInput, retryCount - 1); // Retry with decreased retry count
-                } else {
-                    // Handle other errors here.
-                    textView.setText("Error: " + error.getMessage());
-                }
-            }
-        } */,new Response.ErrorListener() {
+        },new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
                 textView.setText("Error: Maximum retry count reached.");

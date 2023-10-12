@@ -34,11 +34,6 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.5.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'com.google.firebase:firebase-ml-vision:24.1.0'//TODO:not using this should be removed
-    implementation 'com.google.firebase:firebase-core:21.1.1'//old version 17.3.0
-    implementation 'com.google.firebase:firebase-ml-natural-language:22.0.1'//old version 22.0.0
-    implementation 'com.google.firebase:firebase-ml-natural-language-id-model:20.0.8'//old version 20.0.7
-    implementation 'com.google.firebase:firebase-ml-natural-language-translate-model:20.0.9'//old version 20.0.8
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
