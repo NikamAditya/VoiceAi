@@ -1,15 +1,21 @@
 package com.example.voiceai;
 
+import static android.Manifest.permission.READ_CALL_LOG;
 import static android.Manifest.permission.RECORD_AUDIO;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresPermission;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
@@ -18,6 +24,8 @@ import android.speech.tts.TextToSpeech;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.Manifest;
+
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
@@ -38,13 +46,19 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import android.database.Cursor;
+import android.provider.CallLog;
+import android.widget.Toast;
+
 public class MainActivity extends AppCompatActivity {
 
     private TextView textView;
     private EditText editText;
 
     private String stringURLEndPoint = "https://api.openai.com/v1/chat/completions";
-    private String stringAPIKey = "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";
+    private String stringAPIKey = "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";
+    private static final int MY_PERMISSIONS_REQUEST_READ_CALL_LOG = 123; // Use any unique integer value
+
     private String stringOutput = "";
 
     private TextToSpeech textToSpeech;
@@ -60,6 +74,16 @@ public class MainActivity extends AppCompatActivity {
         ActivityCompat.requestPermissions(this,
                 new String[]{RECORD_AUDIO},
                 PackageManager.PERMISSION_GRANTED);
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CALL_LOG) != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(this, "NO PERMISSION FOR CALLLOG", Toast.LENGTH_SHORT).show();
+
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_CALL_LOG}, MY_PERMISSIONS_REQUEST_READ_CALL_LOG);
+        }
+
+
+
+
 
         textView = findViewById(R.id.textView);
         editText = findViewById(R.id.editText);
@@ -110,14 +134,22 @@ public class MainActivity extends AppCompatActivity {
                 if (matches != null) {
                     string = matches.get(0);
                     editText.setText(string);
-                    switch (string.toLowerCase()) {
-                        case "open camera":
-                            Intent camera = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                            startActivity(camera);
-                            break;
 
-                        default:
-                            chatGPTModel(string + " In maximum 3 sentences");
+                    if(string.toLowerCase().contains("call")){
+                        String[] nameOfContact =string.split("call",2);
+                        String personName = nameOfContact[1];
+                        callContact(toTitleCase(personName));
+                    }else{
+                        switch (string.toLowerCase()) {
+                            case "open camera":
+                                Intent camera = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                                startActivity(camera);
+                                break;
+
+
+                            default:
+                                chatGPTModel(string + " In maximum 3 sentences");
+                        }
                     }
 
                 }
@@ -132,6 +164,101 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+    private static String toTitleCase(String input) {
+        if (input == null || input.isEmpty()) {
+            return input;
+        }
+
+        // Split the input into words
+        String[] words = input.split(" ");
+
+        // Create a StringBuilder to build the formatted string
+        StringBuilder formattedName = new StringBuilder();
+
+        for (String word : words) {
+            if (word.length() > 0) {
+                // Capitalize the first letter of the word
+                formattedName.append(Character.toUpperCase(word.charAt(0)));
+                if (word.length() > 1) {
+                    // Append the rest of the word in lowercase
+                    formattedName.append(word.substring(1).toLowerCase());
+                }
+                formattedName.append(" "); // Add a space between words
+            }
+        }
+
+        // Remove the trailing space
+        formattedName.deleteCharAt(formattedName.length() - 1);
+
+        return formattedName.toString();
+    }
+
+
+    private void callContact(String personName) {
+       // String phoneNumber = getPhoneNumberFromCallLog(personName);//from call logs
+        String phoneNumber = getPhoneNumberFromContacts(personName);// from contacts
+
+        if (phoneNumber != null) {
+            Intent callIntent = new Intent(Intent.ACTION_CALL);
+            callIntent.setData(Uri.parse("tel:" + phoneNumber));
+            startActivity(callIntent);
+        } else {
+            Toast.makeText(this, "Phone number not found.", Toast.LENGTH_SHORT).show();
+        }
+        
+    }
+
+    private String getPhoneNumberFromCallLog(String personName) {
+        String phoneNumber = null;
+        String[] projection = {
+                CallLog.Calls.NUMBER
+        };
+        String selection = CallLog.Calls.CACHED_NAME + "=?";
+        String[] selectionArgs = {personName};
+        Cursor cursor = getContentResolver().query(
+                CallLog.Calls.CONTENT_URI,
+                projection,
+                selection,
+                selectionArgs,
+                CallLog.Calls.DATE + " DESC"
+        );
+
+        if (cursor != null && cursor.moveToFirst()) {
+        //    Toast.makeText(this, "Phone number not found.", Toast.LENGTH_SHORT).show();
+            int numberColumn = cursor.getColumnIndex(CallLog.Calls.NUMBER);
+            phoneNumber = cursor.getString(numberColumn);
+            cursor.close();
+        }
+
+        return phoneNumber;
+
+    }
+
+
+    private String getPhoneNumberFromContacts(String personName) {
+        String phoneNumber = null;
+        String[] projection = {
+                ContactsContract.CommonDataKinds.Phone.NUMBER
+        };
+        String selection = ContactsContract.Data.DISPLAY_NAME + "=?";
+        String[] selectionArgs = {personName};
+        Cursor cursor = getContentResolver().query(
+                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                projection,
+                selection,
+                selectionArgs,
+                null
+        );
+
+        if (cursor != null && cursor.moveToFirst()) {
+            int numberColumn = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
+            phoneNumber = cursor.getString(numberColumn);
+            cursor.close();
+        }
+
+        return phoneNumber;
+    }
+
 
 
     public void buttonAssist(View view){
@@ -142,6 +269,17 @@ public class MainActivity extends AppCompatActivity {
         }
         stringOutput = "";
         speechRecognizer.startListening(intent);
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == MY_PERMISSIONS_REQUEST_READ_CALL_LOG) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted, proceed with accessing the call log.
+            } else {
+                // Permission denied, handle this situation (e.g., show a message to the user).
+            }
+        }
     }
 
     private void chatGPTModel( String stringInput){
