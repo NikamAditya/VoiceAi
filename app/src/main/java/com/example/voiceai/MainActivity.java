@@ -7,6 +7,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresPermission;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.pm.PackageInfo;
+import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Bundle;
 
@@ -43,6 +45,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -56,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText editText;
 
     private String stringURLEndPoint = "https://api.openai.com/v1/chat/completions";
-    private String stringAPIKey = "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";
+    private String stringAPIKey = "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";
     private static final int MY_PERMISSIONS_REQUEST_READ_CALL_LOG = 123; // Use any unique integer value
 
     private String stringOutput = "";
@@ -65,6 +68,8 @@ public class MainActivity extends AppCompatActivity {
 
     private SpeechRecognizer speechRecognizer;
     private Intent intent;
+    private PackageManager packageManager;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,8 +86,7 @@ public class MainActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_CALL_LOG}, MY_PERMISSIONS_REQUEST_READ_CALL_LOG);
         }
 
-
-
+        packageManager = getPackageManager();
 
 
         textView = findViewById(R.id.textView);
@@ -136,20 +140,15 @@ public class MainActivity extends AppCompatActivity {
                     editText.setText(string);
 
                     if(string.toLowerCase().contains("call")){
-                        String[] nameOfContact =string.split("call",2);
+                        String[] nameOfContact =string.split(" ",2);//check
                         String personName = nameOfContact[1];
                         callContact(toTitleCase(personName));
+                    }else if(string.toLowerCase().contains("open")){
+                        String[] array =string.split(" ",2);
+                        String appName = array[1];
+                        openAppByName(appName.toLowerCase());
                     }else{
-                        switch (string.toLowerCase()) {
-                            case "open camera":
-                                Intent camera = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                                startActivity(camera);
-                                break;
-
-
-                            default:
-                                chatGPTModel(string + " In maximum 3 sentences");
-                        }
+                        chatGPTModel(string + " In maximum 3 sentences");
                     }
 
                 }
@@ -164,6 +163,29 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
+
+    private void openAppByName(String appName) {
+        List<PackageInfo> installedApps = packageManager.getInstalledPackages(0);
+
+        for (PackageInfo appInfo : installedApps) {
+            String label = appInfo.applicationInfo.loadLabel(packageManager).toString().toLowerCase();
+            if (label.equals(appName)) {
+                String packageName = appInfo.packageName;
+                Intent launchIntent = packageManager.getLaunchIntentForPackage(packageName);
+                if (launchIntent != null) {
+                    startActivity(launchIntent);
+                    return;
+                }
+            }
+        }
+
+        // App not found
+        textToSpeech.speak("App not found", TextToSpeech.QUEUE_FLUSH, null,null);
+    }
+
+
+
     private static String toTitleCase(String input) {
         if (input == null || input.isEmpty()) {
             return input;
