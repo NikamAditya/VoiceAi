@@ -7,6 +7,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresPermission;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.pm.PackageInfo;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
@@ -44,6 +46,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -59,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText editText;
 
     private String stringURLEndPoint = "https://api.openai.com/v1/chat/completions";
-    private String stringAPIKey = "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";
+    private String stringAPIKey = "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";
     private static final int MY_PERMISSIONS_REQUEST_READ_CALL_LOG = 123; // Use any unique integer value
 
     private String stringOutput = "";
@@ -147,12 +150,30 @@ public class MainActivity extends AppCompatActivity {
                         String[] array =string.split(" ",2);
                         String appName = array[1];
                         openAppByName(appName.toLowerCase());
+                    }else if(string.toLowerCase().contains("alarm")){
+                        String time=null,amPm=null;
+                        if(string.toLowerCase().contains("set an alarm for")){
+                            String[] array =string.split(" ");
+                            time = array[4];
+                            amPm = array[5];
+                        }else if(string.toLowerCase().contains("set alarm for")){
+                            String[] array =string.split(" ");
+                            time = array[3];
+                            amPm = array[4];
+                        }else if(string.toLowerCase().contains("set alarm")){
+                            String[] array =string.split(" ");
+                            time = array[2];
+                            amPm = array[3];
+                        }
+                        setAlarm(time, amPm);
+                    }
+
                     }else{
                         chatGPTModel(string + " In maximum 3 sentences");
                     }
 
                 }
-            }
+
 
             @Override
             public void onPartialResults(Bundle bundle) {
@@ -162,6 +183,49 @@ public class MainActivity extends AppCompatActivity {
             public void onEvent(int i, Bundle bundle) {
             }
         });
+    }
+
+    private void setAlarm(String time, String amPm) {
+        if(time == null || amPm == null)
+            return;
+
+        Calendar calendar = Calendar.getInstance();
+        int hour, minute;
+
+        // Parse the time provided by the user
+        String[] timeParts = time.split(":");
+        if (timeParts.length == 2) {
+            hour = Integer.parseInt(timeParts[0]);
+            minute = Integer.parseInt(timeParts[1]);
+            Toast.makeText(this, amPm + " INSIDE PM "+hour, Toast.LENGTH_SHORT).show();
+            // Adjust for AM/PM
+            if (amPm.equalsIgnoreCase("P.M.") && hour < 12) {
+                hour += 12;
+                Toast.makeText(this, "INSIDE PM "+hour, Toast.LENGTH_SHORT).show();
+            }
+            if (amPm.equalsIgnoreCase("A.M.") && hour == 12) {
+                hour = 0;
+            }
+
+            // Set the alarm
+            calendar.set(Calendar.HOUR_OF_DAY, hour);
+            calendar.set(Calendar.MINUTE, minute);
+            calendar.set(Calendar.SECOND, 0);
+
+            AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+            Intent alarmIntent = new Intent(this, AlarmReceiver.class);
+
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, alarmIntent, PendingIntent.FLAG_IMMUTABLE);
+            alarmIntent.setAction(time);
+
+            // Schedule the alarm
+            alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+            Toast.makeText(this, "NO PERMISSION FOR CALLLOG "+calendar.getTimeInMillis(), Toast.LENGTH_LONG).show();
+            // Inform the user
+            textToSpeech.speak("Alarm set for " + time + " " + amPm, TextToSpeech.QUEUE_FLUSH, null, null);
+        } else {
+            textToSpeech.speak("Invalid time format", TextToSpeech.QUEUE_FLUSH, null, null);
+        }
     }
 
 
@@ -227,7 +291,7 @@ public class MainActivity extends AppCompatActivity {
         } else {
             Toast.makeText(this, "Phone number not found.", Toast.LENGTH_SHORT).show();
         }
-        
+
     }
 
     private String getPhoneNumberFromCallLog(String personName) {
