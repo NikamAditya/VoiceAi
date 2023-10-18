@@ -84,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
                 PackageManager.PERMISSION_GRANTED);
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CALL_LOG) != PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(this, "NO PERMISSION FOR CALLLOG", Toast.LENGTH_SHORT).show();
+           // Toast.makeText(this, "NO PERMISSION FOR CALLLOG", Toast.LENGTH_SHORT).show();
 
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_CALL_LOG}, MY_PERMISSIONS_REQUEST_READ_CALL_LOG);
         }
@@ -142,37 +142,35 @@ public class MainActivity extends AppCompatActivity {
                     string = matches.get(0);
                     editText.setText(string);
 
-                    if(string.toLowerCase().contains("call")){
-                        String[] nameOfContact =string.split(" ",2);//check
+                    if (string.toLowerCase().contains("call")) {
+                        String[] nameOfContact = string.split(" ", 2);//check
                         String personName = nameOfContact[1];
                         callContact(toTitleCase(personName));
-                    }else if(string.toLowerCase().contains("open")){
-                        String[] array =string.split(" ",2);
+                    } else if (string.toLowerCase().contains("open")) {
+                        String[] array = string.split(" ", 2);
                         String appName = array[1];
                         openAppByName(appName.toLowerCase());
-                    }else if(string.toLowerCase().contains("alarm")){
-                        String time=null,amPm=null;
-                        if(string.toLowerCase().contains("set an alarm for")){
-                            String[] array =string.split(" ");
+                    } else if (string.toLowerCase().contains("alarm")) {
+                        String time = null, amPm = null;
+                        if (string.toLowerCase().contains("set an alarm for")) {
+                            String[] array = string.split(" ");
                             time = array[4];
                             amPm = array[5];
-                        }else if(string.toLowerCase().contains("set alarm for")){
-                            String[] array =string.split(" ");
+                        } else if (string.toLowerCase().contains("set alarm for")) {
+                            String[] array = string.split(" ");
                             time = array[3];
                             amPm = array[4];
-                        }else if(string.toLowerCase().contains("set alarm")){
-                            String[] array =string.split(" ");
+                        } else if (string.toLowerCase().contains("set alarm")) {
+                            String[] array = string.split(" ");
                             time = array[2];
                             amPm = array[3];
                         }
                         setAlarm(time, amPm);
-                    }
-
-                    }else{
+                    } else {
                         chatGPTModel(string + " In maximum 3 sentences");
                     }
-
                 }
+            }
 
 
             @Override
