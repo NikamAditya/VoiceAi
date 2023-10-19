@@ -140,10 +140,10 @@ public class MainActivity extends AppCompatActivity {
                 textView.setText("");
                 if (matches != null) {
                     string = matches.get(0);
-                    editText.setText(string);
+                    editText.setText(string); // aditya nikam Aditya Nikam
 
                     if (string.toLowerCase().contains("call")) {
-                        String[] nameOfContact = string.split(" ", 2);//check
+                        String[] nameOfContact = string.split(" ", 2);
                         String personName = nameOfContact[1];
                         callContact(toTitleCase(personName));
                     } else if (string.toLowerCase().contains("open")) {
@@ -218,7 +218,7 @@ public class MainActivity extends AppCompatActivity {
 
             // Schedule the alarm
             alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
-            Toast.makeText(this, "NO PERMISSION FOR CALLLOG "+calendar.getTimeInMillis(), Toast.LENGTH_LONG).show();
+            //Toast.makeText(this, "NO PERMISSION FOR CALLLOG "+calendar.getTimeInMillis(), Toast.LENGTH_LONG).show();
             // Inform the user
             textToSpeech.speak("Alarm set for " + time + " " + amPm, TextToSpeech.QUEUE_FLUSH, null, null);
         } else {
@@ -375,7 +375,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             jsonObject.put("model", "gpt-3.5-turbo");
 
-            JSONArray jsonArrayMessage = new JSONArray();
+            JSONArray jsonArrayMessage = new JSONArray();//key:[{role,promt},{},{}]
             JSONObject jsonObjectMessage = new JSONObject();
             jsonObjectMessage.put("role", "user");
             jsonObjectMessage.put("content", stringInput);
