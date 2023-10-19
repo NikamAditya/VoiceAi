@@ -62,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText editText;
 
     private String stringURLEndPoint = "https://api.openai.com/v1/chat/completions";
-    private String stringAPIKey = "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";
+    private String stringAPIKey = "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";
     private static final int MY_PERMISSIONS_REQUEST_READ_CALL_LOG = 123; // Use any unique integer value
 
     private String stringOutput = "";
